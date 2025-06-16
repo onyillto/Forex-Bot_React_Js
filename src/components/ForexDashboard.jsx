@@ -45,35 +45,48 @@ const ForexDashboard = () => {
     fetchInitialData();
   }, []);
 
-  const handlePredict = async () => {
-    setLoading(true);
-    setError(null);
-    setPrediction(null);
+const handlePredict = async () => {
+  setLoading(true);
+  setError(null);
+  setPrediction(null);
 
-    try {
-      const response = await axios.post(`${API_BASE}/api/predict`, formData, {
-        timeout: 120000, // 2 minutes timeout
-      });
+  // LOG THE REQUEST DATA
+  console.log("🚀 Sending request to:", `${API_BASE}/api/predict`);
+  console.log("📤 Request data:", formData);
+  console.log("🌐 API_BASE:", API_BASE);
 
-      if (response.data.success) {
-        setPrediction(response.data);
-      } else {
-        setError(response.data.error || "Prediction failed");
-      }
-    } catch (err) {
-      if (err.code === "ECONNABORTED") {
-        setError(
-          "Request timeout. Model training takes time, please try with fewer epochs."
-        );
-      } else if (err.response) {
-        setError(err.response.data.error || "Server error");
-      } else {
-        setError("Failed to connect to API: " + err.message);
-      }
-    } finally {
-      setLoading(false);
+  try {
+    const response = await axios.post(`${API_BASE}/api/predict`, formData, {
+      timeout: 120000,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    console.log("✅ Response received:", response.data);
+
+    if (response.data.success) {
+      setPrediction(response.data);
+    } else {
+      setError(response.data.error || "Prediction failed");
     }
-  };
+  } catch (err) {
+    console.error("❌ Request failed:", err);
+    console.error("❌ Error response:", err.response?.data);
+
+    if (err.code === "ECONNABORTED") {
+      setError(
+        "Request timeout. Model training takes time, please try with fewer epochs."
+      );
+    } else if (err.response) {
+      setError(err.response.data.error || "Server error");
+    } else {
+      setError("Failed to connect to API: " + err.message);
+    }
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleQuickPredict = async (symbol) => {
     setLoading(true);
